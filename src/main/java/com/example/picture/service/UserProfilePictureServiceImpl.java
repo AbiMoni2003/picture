@@ -33,7 +33,7 @@ public class UserProfilePictureServiceImpl implements UserProfilePictureService 
         if (profilePicture.isEmpty()) {
             return ResponseEntity
                     .status(HttpStatus.OK)
-                    .body(new UserProfilePictureResponseDto("Profile picture not found for user ID: " + userId).getMessage().getBytes());
+                    .body(new UserProfilePictureResponseDto("user ID: " + userId+" not found").getMessage().getBytes());
         }
 
         UserProfilePicture pic = profilePicture.get();

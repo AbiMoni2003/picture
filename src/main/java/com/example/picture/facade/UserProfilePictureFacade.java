@@ -23,19 +23,18 @@ public class UserProfilePictureFacade {
 
     public ResponseEntity<String> uploadProfilePicture(String userId, MultipartFile file) {
         if (file.isEmpty()) {
-            return ResponseEntity.ok().body("File is empty");
+            return ResponseEntity.ok().body("You have not select any file");
         }
 
         try {
             validateImageFile(file);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.ok().body(e.getMessage());
         }
 
-        // Check if a profile picture already exists for the user ID
         Optional<UserProfilePicture> existingPicture = repository.findByUserId(userId);
         if (existingPicture.isPresent()) {
-            return ResponseEntity.ok("Profile picture already exists for user ID: " + userId);
+            return ResponseEntity.ok("User ID: " + userId+" already in use");
         }
 
 
@@ -51,7 +50,6 @@ public class UserProfilePictureFacade {
                     .body("Error saving file to disk");
         }
 
-        // Save file details to the database
         UserProfilePicture userProfilePicture = new UserProfilePicture();
         userProfilePicture.setUserId(userId);
         userProfilePicture.setFileName(filePath.toString()); // Store the path in the database
