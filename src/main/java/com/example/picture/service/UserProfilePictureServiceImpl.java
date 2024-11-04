@@ -38,8 +38,6 @@ public class UserProfilePictureServiceImpl implements UserProfilePictureService 
 
         UserProfilePicture pic = profilePicture.get();
         byte[] pictureData = pic.getData();
-
-        // Check if pictureData is null
         if (pictureData == null) {
             return ResponseEntity
                     .status(HttpStatus.OK)

@@ -8,11 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -42,7 +38,6 @@ public class UserProfilePictureFacade {
             return ResponseEntity.status(HttpStatus.OK).body("Error reading file");
         }
 
-        // Save the user profile picture to the database
         repository.save(userProfilePicture);
 
         return ResponseEntity.ok("Profile picture uploaded successfully for user ID: " + userId);
