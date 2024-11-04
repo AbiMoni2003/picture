@@ -9,6 +9,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -17,31 +20,55 @@ public class UserProfilePictureFacade {
     @Autowired
     private UserProfilePictureRepository repository;
     private final String uploadDir = "D:/uploads/";
+
     public ResponseEntity<String> uploadProfilePicture(String userId, MultipartFile file) {
         if (file.isEmpty()) {
             return ResponseEntity.ok().body("File is empty");
         }
+
+        try {
+            validateImageFile(file);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+
+        // Check if a profile picture already exists for the user ID
         Optional<UserProfilePicture> existingPicture = repository.findByUserId(userId);
         if (existingPicture.isPresent()) {
             return ResponseEntity.ok("Profile picture already exists for user ID: " + userId);
         }
 
-        UserProfilePicture userProfilePicture = new UserProfilePicture();
-        userProfilePicture.setUserId(userId);
-        userProfilePicture.setFileName(file.getOriginalFilename());
-        userProfilePicture.setFileType(file.getContentType());
-        userProfilePicture.setUploadDate(LocalDateTime.now());
+
+        String fileName = userId + "_" + file.getOriginalFilename();
+        Path filePath = Paths.get(uploadDir, fileName);
+
 
         try {
-            userProfilePicture.setData(file.getBytes()); // Convert file to byte array
+            Files.createDirectories(filePath.getParent());
+            Files.write(filePath, file.getBytes());
         } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.OK).body("Error reading file");
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body("Error saving file to disk");
+        }
+
+        // Save file details to the database
+        UserProfilePicture userProfilePicture = new UserProfilePicture();
+        userProfilePicture.setUserId(userId);
+        userProfilePicture.setFileName(filePath.toString()); // Store the path in the database
+        userProfilePicture.setFileType(file.getContentType());
+        userProfilePicture.setUploadDate(LocalDateTime.now());
+        try {
+            userProfilePicture.setData(file.getBytes()); // Store data as byte array (optional)
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body("Error reading file for database storage");
         }
 
         repository.save(userProfilePicture);
 
         return ResponseEntity.ok("Profile picture uploaded successfully for user ID: " + userId);
     }
+
     private void validateImageFile(MultipartFile file) {
         String fileType = file.getContentType();
         if (fileType == null || (!fileType.equals("image/jpeg") && !fileType.equals("image/png"))) {
